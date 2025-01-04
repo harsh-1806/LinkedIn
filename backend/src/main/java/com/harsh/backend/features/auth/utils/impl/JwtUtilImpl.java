@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -46,8 +47,14 @@ public class JwtUtilImpl implements JwtUtil {
     }
 
     @Override
-    public String generateToken(String email) {
-        Map<String, Object> claims = new HashMap<>();
+    @SuppressWarnings("unchecked")
+    public List<String> extractRoles(String token) {
+        return extractClaim(token, claims -> claims.get("roles", List.class));
+    }
+
+    @Override
+    public String generateToken(String email, List<String> role) {
+        Map<String, Object> claims = Map.of("roles", role);
         return generateToken(claims, email);
     }
 
@@ -55,11 +62,11 @@ public class JwtUtilImpl implements JwtUtil {
     public String generateToken(Map<String, Object> claims, String email) {
         return Jwts
                 .builder()
-                .claims(claims)
                 .subject(email)
+                .claims(claims)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + (60 * 1000L * jwtExpiration)))
-                .signWith(getSignKey())
+                .signWith(getSignKey(), Jwts.SIG.HS256)
                 .compact();
     }
 
@@ -80,7 +87,6 @@ public class JwtUtilImpl implements JwtUtil {
 
     @Override
     public boolean validateToken(String token, UserDetails userDetails) {
-
         String email = extractEmail(token);
         return email.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }

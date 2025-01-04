@@ -5,6 +5,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -13,9 +14,11 @@ public interface JwtUtil {
 
     Date extractExpiration(String token);
 
+    List<String> extractRoles(String token);
+
     boolean isTokenExpired(String token);
 
-    String generateToken(String email);
+    String generateToken(String email, List<String> roles);
 
     String generateToken(Map<String, Object> claims, String email);
 

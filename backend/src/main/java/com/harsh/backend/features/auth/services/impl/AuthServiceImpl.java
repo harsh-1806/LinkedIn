@@ -5,7 +5,6 @@ import com.harsh.backend.features.auth.dtos.requests.SignupRequestDto;
 import com.harsh.backend.features.auth.dtos.responses.JwtResponse;
 import com.harsh.backend.features.auth.exceptions.EmailAlreadyExistsException;
 import com.harsh.backend.features.auth.exceptions.UserNotFoundException;
-import com.harsh.backend.features.auth.model.Role;
 import com.harsh.backend.features.auth.model.User;
 import com.harsh.backend.features.auth.repository.UserRepository;
 import com.harsh.backend.features.auth.services.AuthService;
@@ -21,8 +20,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -66,7 +63,7 @@ public class AuthServiceImpl implements AuthService {
 
         User savedUser = userRepository.save(user);
 
-        String jwtToken = jwtUtil.generateToken(signupRequestDto.getEmail());
+        String jwtToken = jwtUtil.generateToken(signupRequestDto.getEmail(), List.of("USER"));
         return new JwtResponse(jwtToken, savedUser.getUserId().toString());
     }
 
@@ -81,7 +78,7 @@ public class AuthServiceImpl implements AuthService {
 
                 User user = userOptional.get();
 
-                String jwtToken = jwtUtil.generateToken(userDetails.getUsername());
+                String jwtToken = jwtUtil.generateToken(userDetails.getUsername(), List.of("USER"));
 
                 return new JwtResponse(jwtToken, user.getUserId().toString());
             }
@@ -107,13 +104,12 @@ public class AuthServiceImpl implements AuthService {
                 .email(signupRequestDto.getEmail())
                 .password(passwordEncoder.encode(signupRequestDto.getPassword()))
                 .firstName(signupRequestDto.getFirstName())
-                .roles(List.of(Role.builder().roleName("ADMIN").build()))
                 .lastName(signupRequestDto.getLastName())
                 .build();
 
         User savedUser = userRepository.save(user);
 
-        String jwtToken = jwtUtil.generateToken(signupRequestDto.getEmail());
+        String jwtToken = jwtUtil.generateToken(signupRequestDto.getEmail(), List.of("ADMIN", "USER"));
         return new JwtResponse(jwtToken, savedUser.getUserId().toString());
     }
 }

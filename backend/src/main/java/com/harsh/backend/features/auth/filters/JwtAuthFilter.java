@@ -61,8 +61,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     User user = userRepository.findByEmail(userEmail)
                             .orElseThrow(() -> new UsernameNotFoundException("User not found with email : " + userEmail));
 
-                    List<GrantedAuthority> grantedAuthorities = user.getRoles().stream()
-                            .map((role) -> new SimpleGrantedAuthority("ROLE_" + role.getRoleName()))
+                    List<String> roles = jwtUtil.extractRoles(jwt);
+
+                    List<GrantedAuthority> grantedAuthorities = roles.stream()
+                            .map((role) -> new SimpleGrantedAuthority("ROLE_" + role))
                             .collect(Collectors.toList());
 
 
