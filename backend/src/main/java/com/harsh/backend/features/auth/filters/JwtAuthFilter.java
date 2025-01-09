@@ -57,10 +57,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
 
                 if(jwtUtil.validateToken(jwt, userDetails)) {
-
-                    User user = userRepository.findByEmail(userEmail)
-                            .orElseThrow(() -> new UsernameNotFoundException("User not found with email : " + userEmail));
-
                     List<String> roles = jwtUtil.extractRoles(jwt);
 
                     List<GrantedAuthority> grantedAuthorities = roles.stream()
