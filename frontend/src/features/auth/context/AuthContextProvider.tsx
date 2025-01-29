@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import Loader from '../../../components/Loader'
 
 interface User {
@@ -24,33 +24,25 @@ export function useAuthentication() {
 const apiUrl: string = import.meta.env.VITE_API_URL
 const userEndpoint : string = apiUrl + '/api/v1/auth/user'
 
-console.log(apiUrl)
-
- const request = async (endpoint: string, options: RequestInit) => {
-        try {
-            const response = await fetch(`${apiUrl}${endpoint}`, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...options.headers,
-                },
-                ...options,
-            })
-
-            if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.message || 'An error occurred')
-            }
-
-            return await response.json()
-        } catch (error) {
-            if(error instanceof Error) {
-                throw new Error(error.message)
-            }
-            else {
-                throw new Error('An error occurred')
-            }
+const request = async (path: string, options: RequestInit) => {
+    const endpoint = `${apiUrl}${path}`;
+    const headers = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+        ...options.headers,
+    };
+    try {
+        const response = await fetch(endpoint, { ...options, headers });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'An error occurred');
         }
+        return await response.json();
+    } catch (error) {
+        throw new Error(error instanceof Error ? error.message : 'An error occurred');
     }
+};
+
 
 
 const AuthContextProvider = () => {
@@ -64,10 +56,13 @@ const AuthContextProvider = () => {
     location.pathname === '/request-password-reset'
 
     const login = async (email: string, password: string) => {
-        return request('/api/v1/auth/login', {
+        const data = await request('/api/v1/auth/login', {
             method: 'POST',
             body: JSON.stringify({ email, password }),
         })
+        // Save the token to localStorage
+        localStorage.setItem('token', data.token)
+        return data
     }
 
     const signup = async (data: { email: string; password: string; name: string }) => {
@@ -118,6 +113,9 @@ const AuthContextProvider = () => {
             }
 
             const user = await response.json()
+
+            console.log(user)
+
             setUser(user)
         }
         catch(e) {

@@ -4,14 +4,15 @@ import Input from '../../components/Input/Input'
 import Button from '../../components/Button/Button'
 import classes from './Login.module.scss'
 import Seperator from '../../components/Seperator/Seperator'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { FormEvent, useState } from 'react'
 import { useAuthentication } from '../../context/AuthContextProvider'
 
 const Login = () => {
     const [errorMessage, setErrorMessage] = useState('')
-
+    const [isLoading, setIsLoading] = useState(false)
     const authContext = useAuthentication()
+
 
     if(!authContext) {
         throw new Error('Authentication context not found')
@@ -19,13 +20,21 @@ const Login = () => {
 
     const { login } = authContext
 
+    const navigate = useNavigate()
+    const location = useLocation()
+
     const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
+        setIsLoading(true)
         const email = e.currentTarget.email.value;
         const password = e.currentTarget.password.value;
 
         try {
             await login(email, password)
+            
+            const destination = location.state?.from || '/'
+            navigate(destination)
+
         } catch (error) {
             if(error instanceof Error) {
                 console.log(error)
@@ -34,6 +43,9 @@ const Login = () => {
             else {
                 setErrorMessage('An error occurred')
             }
+        }
+        finally {
+            setIsLoading(false)
         }
     }
 
@@ -55,8 +67,8 @@ const Login = () => {
                         <a href="">Privacy Policy</a>, and{' '}
                         <a href="">Cookie Policy</a>.
                     </p>
-                    <Button type="submit" id="submit">
-                        Sign In
+                    <Button type="submit" id="submit" disabled={isLoading}>
+                        {isLoading ? '...' : 'Sign In'}
                     </Button>
                     <Link to="/request-password-reset">Forgot password?</Link>
                 </form>
