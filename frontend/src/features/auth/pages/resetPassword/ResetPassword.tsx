@@ -7,15 +7,19 @@ import ResetPasswordVerification from './ResetPasswordVerification'
 
 const ResetPassword = () => {
     const [emailSent, setEmailSent] = useState<boolean>(false)
+    const [email, setEmail] = useState<string>('')
 
     return (
         <Layout className={classes.root}>
             <Box>
                 <h1>Reset Password</h1>
                 {!emailSent ? (
-                    <ResetPasswordEmailForm setEmailSent={setEmailSent} />
+                    <ResetPasswordEmailForm
+                        setEmail={setEmail}
+                        setEmailSent={setEmailSent}
+                    />
                 ) : (
-                    <ResetPasswordVerification />
+                    <ResetPasswordVerification email={email} />
                 )}
             </Box>
         </Layout>

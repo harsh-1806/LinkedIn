@@ -5,13 +5,20 @@ import Loader from '../../../components/Loader'
 interface User {
     id: string
     email: string
-    emailVerified: boolean
+    isVerified: boolean
+}
+
+interface ApiResponse {
+    message: string
+    status: string
+    success: boolean
 }
 
 interface AuthContextType {
     user: User | null
     login: (email: string, password: string) => Promise<void>
-    signup: (data : {email: string, password: string, name: string}) => Promise<void>
+    signup: (data: { email: string; password: string }) => Promise<any>
+    verifyEmail: (token: string) => Promise<ApiResponse>
     logout: () => void
 }
 
@@ -22,38 +29,40 @@ export function useAuthentication() {
 }
 
 const apiUrl: string = import.meta.env.VITE_API_URL
-const userEndpoint : string = apiUrl + '/api/v1/auth/user'
+const userEndpoint: string = apiUrl + '/api/v1/auth/user'
 
 const request = async (path: string, options: RequestInit) => {
-    const endpoint = `${apiUrl}${path}`;
+    const endpoint = `${apiUrl}${path}`
     const headers = {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem('token')}`,
         ...options.headers,
-    };
-    try {
-        const response = await fetch(endpoint, { ...options, headers });
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'An error occurred');
-        }
-        return await response.json();
-    } catch (error) {
-        throw new Error(error instanceof Error ? error.message : 'An error occurred');
     }
-};
-
-
+    try {
+        const response = await fetch(endpoint, { ...options, headers })
+        if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(errorData.message || 'An error occurred')
+        }
+        return await response.json()
+    } catch (error) {
+        throw new Error(
+            error instanceof Error ? error.message : 'An error occurred'
+        )
+    }
+}
 
 const AuthContextProvider = () => {
     const [user, setUser] = useState<User | null>(null)
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isLoading, setIsLoading] = useState<boolean>(true)
     const location = useLocation()
 
-    const isAuthPage = 
-    location.pathname === '/login' ||
-    location.pathname === '/signup' ||
-    location.pathname === '/request-password-reset'
+    const isAuthPage = [
+        '/login',
+        '/signup',
+        '/request-password-reset',
+        '/verify-email',
+    ].includes(location.pathname)
 
     const login = async (email: string, password: string) => {
         const data = await request('/api/v1/auth/login', {
@@ -65,13 +74,15 @@ const AuthContextProvider = () => {
         return data
     }
 
-    const signup = async (data: { email: string; password: string; name: string }) => {
-        return request('/signup', {
+    const signup = async (data: { email: string; password: string }) => {
+        const response = await request('/api/v1/auth/register', {
             method: 'POST',
             body: JSON.stringify(data),
         })
-    }
 
+        localStorage.setItem('token', response.token)
+        return data
+    }
 
     const resetPassword = async (email: string) => {
         return request('/reset-password', {
@@ -81,21 +92,19 @@ const AuthContextProvider = () => {
     }
 
     const verifyEmail = async (token: string) => {
-        return request(
-            `/verify-email`,
-            {
-                method: 'GET',
-            }
-        )
+        return request(`/api/v1/auth/validate-email?token=${token}`, {
+            method: 'PUT',
+            headers: {},
+        })
     }
 
     const logout = async () => {
-        localStorage.removeItem('token');
-        setUser(null);
+        localStorage.removeItem('token')
+        setUser(null)
     }
 
     useEffect(() => {
-        if(user) return
+        if (user) return
 
         fetchUser()
     }, [user, location.pathname])
@@ -105,44 +114,44 @@ const AuthContextProvider = () => {
             const response = await fetch(userEndpoint, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`,
-                }
-            });
+                },
+            })
 
-            if(!response.ok) {
-                throw new Error('Authentication Failed');
+            if (!response.ok) {
+                throw new Error('Authentication Failed')
             }
 
             const user = await response.json()
 
-            console.log(user)
+            console.log(user.isVerified)
 
             setUser(user)
-        }
-        catch(e) {
-            console.error(e);
-        }
-        finally {
-            setIsLoading(false);
+        } catch (e) {
+            console.error(e)
+        } finally {
+            setIsLoading(false)
         }
     }
 
-    if(isLoading) {
+    if (isLoading) {
         return <Loader />
     }
 
-    if(!isLoading && !user && !isAuthPage) {
+    if (!isLoading && !user && !isAuthPage) {
         return <Navigate to={'/login'} />
     }
 
-    if(user && user.emailVerified && isAuthPage) {
-        return <Navigate to={'/'}/>
+    if (user && user.isVerified && isAuthPage) {
+        return <Navigate to={'/'} />
     }
 
     return (
-        <AuthContext.Provider value={{user, login, signup, logout}}>
-            {
-                user && !user.emailVerified ? <Navigate to={'/verify-email'} /> : null
-            }
+        <AuthContext.Provider
+            value={{ user, login, verifyEmail, signup, logout }}
+        >
+            {user && !user.isVerified ? (
+                <Navigate to={'/verify-email'} />
+            ) : null}
             <Outlet />
         </AuthContext.Provider>
     )

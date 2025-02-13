@@ -4,7 +4,29 @@ import Button from '../../components/Button/Button'
 import { useNavigate } from 'react-router-dom'
 import classes from './ResetPassword.module.scss'
 
-const ResetPasswordVerification = () => {
+const apiUrl = import.meta.env.VITE_API_URL as string
+
+const request = async (path: string, options: RequestInit) => {
+    const endpoint = `${apiUrl}${path}`
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers,
+    }
+    try {
+        const response = await fetch(endpoint, { ...options, headers })
+        if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(errorData.message || 'An error occurred')
+        }
+        return await response.json()
+    } catch (error) {
+        throw new Error(
+            error instanceof Error ? error.message : 'An error occurred'
+        )
+    }
+}
+
+const ResetPasswordVerification = (props: { email: string }) => {
     const navigate = useNavigate()
     const [code, setCode] = useState('')
     const [password, setPassword] = useState('')
@@ -12,13 +34,32 @@ const ResetPasswordVerification = () => {
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
+
         if (!code.trim() || !password.trim()) {
             setErrorMessage('Both fields are required')
             return
         }
-        setErrorMessage('')
-        console.log('Verification code and password submitted')
-        // Proceed with the reset password logic
+
+        try {
+            request('/api/v1/auth/validate-reset-password', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: props.email,
+                    token: code,
+                    newPassword: password,
+                }),
+            })
+
+            setErrorMessage('')
+            navigate('/login')
+            console.log('Verification code and password submitted')
+        } catch (error) {
+            if (error instanceof Error) {
+                setErrorMessage(error.message)
+            } else {
+                setErrorMessage('An error occurred. Please try again later.')
+            }
+        }
     }
 
     return (

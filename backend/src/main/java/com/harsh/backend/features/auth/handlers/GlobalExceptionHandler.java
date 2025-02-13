@@ -13,17 +13,39 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ApiResponse> handleUserNotFoundException(UserNotFoundException e) {
-        ApiResponse response = ApiResponse.builder().message(e.getMessage()).success(Boolean.TRUE).status(HttpStatus.NOT_FOUND).build();
+        ApiResponse response = ApiResponse.builder()
+                .message(e.getMessage())
+                .success(Boolean.TRUE)
+                .status(HttpStatus.NOT_FOUND)
+                .build();
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        ApiResponse response = ApiResponse.builder().message(e.getMessage()).success(Boolean.TRUE).status(HttpStatus.NOT_ACCEPTABLE).build();
+        ApiResponse response = ApiResponse.builder()
+                .message(e.getMessage())
+                .success(Boolean.TRUE)
+                .status(HttpStatus.NOT_ACCEPTABLE)
+                .build();
         return new ResponseEntity<>(response, HttpStatus.NOT_ACCEPTABLE);
     }
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<ApiResponse> handleEmailAlreadyExistsException(EmailAlreadyExistsException e) {
-        ApiResponse response = ApiResponse.builder().message(e.getMessage()).success(Boolean.TRUE).status(HttpStatus.NOT_ACCEPTABLE).build();
+        ApiResponse response = ApiResponse.builder()
+                .message(e.getMessage())
+                .success(Boolean.TRUE)
+                .status(HttpStatus.NOT_ACCEPTABLE)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.NOT_ACCEPTABLE);
+    }
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse> handleIllegalArgumentException(IllegalArgumentException e) {
+        ApiResponse response = ApiResponse.builder()
+                .message(e.getMessage())
+                .success(Boolean.TRUE)
+                .status(HttpStatus.NOT_ACCEPTABLE)
+                .build();
+
         return new ResponseEntity<>(response, HttpStatus.NOT_ACCEPTABLE);
     }
 }

@@ -1,8 +1,36 @@
 services:
   postgres:
     image: postgres:alpine
+    container_name: postgres_db
+    restart: always
     environment:
-      POSTGRES_PASSWORD: 'password'
       POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
     ports:
-      - '5432:5432'
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+#  pgadmin:
+#    image: dpage/pgadmin4
+#    container_name: pgadmin
+#    restart: always
+#    environment:
+#      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+#      PGADMIN_DEFAULT_PASSWORD: admin
+#    ports:
+#      - "5050:80"
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    restart: always
+    ports:
+      - "1025:1025"  # SMTP Server
+      - "8025:8025"  # Web UI
+
+volumes:
+  postgres_data:

@@ -9,15 +9,24 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create
+  mail:
+    host: 'localhost'
+    port: 1025
+    properties:
+      mail:
+        smtp:
+          auth: false
+
 jwt:
   secret: "dd36173c67426d94abe65220651a7b7f5e14e4b3191d2677f3dcb0161661a163"
   expirationInMinutes: 60
-
-server:
-  port: 8085
 
 logging:
   level:
     org:
       springframework:
         security: DEBUG
+
+server:
+  port: 8085
+

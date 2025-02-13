@@ -1,27 +1,58 @@
 import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import Input from '../../components/Input/Input'
 import Button from '../../components/Button/Button'
 import classes from './ResetPassword.module.scss'
 
 interface ResetPasswordEmailFormProps {
     setEmailSent: React.Dispatch<React.SetStateAction<boolean>>
+    setEmail: React.Dispatch<React.SetStateAction<string>>
+}
+
+const apiUrl = import.meta.env.VITE_API_URL as string
+
+const request = async (path: string, options: RequestInit) => {
+    const endpoint = `${apiUrl}${path}`
+    const headers = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+        ...options.headers,
+    }
+    try {
+        const response = await fetch(endpoint, { ...options, headers })
+        if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(errorData.message || 'An error occurred')
+        }
+        return await response.json()
+    } catch (error) {
+        throw new Error(
+            error instanceof Error ? error.message : 'An error occurred'
+        )
+    }
 }
 
 const ResetPasswordEmailForm: React.FC<ResetPasswordEmailFormProps> = ({
     setEmailSent,
+    setEmail,
 }) => {
-    const [email, setEmail] = useState('')
     const [errorMessage, setErrorMessage] = useState('')
     const navigate = useNavigate()
+    const [userEmail, setUserEmail] = useState('')
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        if (!email.trim()) {
-            setErrorMessage('Email is required')
-            return
+    const handleSubmit = () => {
+        const response = request('/api/v1/auth/send-reset-password-email', {
+            method: 'POST',
+            body: JSON.stringify({ email: userEmail }),
+        })
+
+        if (response !== null) {
+            setErrorMessage('')
+            setEmailSent(true)
+        } else {
+            setErrorMessage('An error occurred. Please try again later.')
         }
-        setErrorMessage('')
+
         setEmailSent(true)
     }
 
@@ -31,8 +62,11 @@ const ResetPasswordEmailForm: React.FC<ResetPasswordEmailFormProps> = ({
                 type="email"
                 id="email"
                 label="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={userEmail}
+                onChange={(e) => {
+                    setUserEmail(e.target.value)
+                    setEmail(e.target.value)
+                }}
             />
             {errorMessage && <p className={classes.error}>{errorMessage}</p>}
             <p>

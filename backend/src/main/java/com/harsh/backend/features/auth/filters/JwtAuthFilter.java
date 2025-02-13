@@ -22,6 +22,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -42,7 +43,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
 
-        if(authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if(authHeader == null || !authHeader.startsWith("Bearer ") || authHeader.substring(7).equals("null")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -68,6 +69,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
                     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
+                    userRepository.findByEmail(userDetails.getUsername()).ifPresent(user -> request.setAttribute("authenticatedUser", user));
                 }
             }
 
