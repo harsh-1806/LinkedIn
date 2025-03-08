@@ -22,11 +22,12 @@ jwt:
   expirationInMinutes: 60
 
 logging:
-  level:
-    org:
-      springframework:
-        security: DEBUG
+    level:
+        org:
+        springframework:
+            security: DEBUG
 
 server:
   port: 8085
+
 

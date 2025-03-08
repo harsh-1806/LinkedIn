@@ -51,8 +51,6 @@ public class SecurityConfig {
         return (args) -> {
             User user = new User();
             user.setEmail("kat@abc.com");
-            user.setFirstName("Harsh");
-            user.setLastName("Kumar");
             user.setIsVerified(false);
             user.setEmailVerificationToken(passwordEncoder().encode("123456"));
             user.setEmailVerificationTokenExpiry(LocalDateTime.now().plusMinutes(15));
