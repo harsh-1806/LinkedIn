@@ -1,4 +1,4 @@
-# LinkedIn Clone — Frontend
+# LinkedIn — Frontend
 
 A reverse-engineered LinkedIn frontend built with **React 18**, **TypeScript**, **Vite**, and **SCSS Modules**. This project recreates LinkedIn's core authentication flows and feed layout with a clean, feature-based architecture.
 
